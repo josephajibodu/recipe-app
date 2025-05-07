@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { Recipe } from '../types/recipe';
+import { mockRecipes } from './mockRecipes';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -71,4 +72,29 @@ export async function getAllRecipes(): Promise<Recipe[]> {
 export async function deleteRecipe(id: string): Promise<void> {
     const db = await getDb();
     await db.runAsync('DELETE FROM recipes WHERE id = ?;', [id]);
-} 
+}
+
+export async function migrateDefaultRecipes() {
+    const db = await getDb();
+    const rows = await db.getAllAsync<any>('SELECT COUNT(*) as count FROM recipes;');
+    if (rows[0]?.count === 0) {
+        for (const recipe of mockRecipes) {
+            await addRecipe(recipe);
+        }
+    }
+}
+
+export async function getRecipeById(id: string): Promise<Recipe | null> {
+    const db = await getDb();
+    const row = await db.getFirstAsync<any>('SELECT * FROM recipes WHERE id = ?', id);
+    if (!row) return null;
+    return {
+        ...row,
+        prepTime: Number(row.prepTime),
+        cookTime: Number(row.cookTime),
+        servings: Number(row.servings),
+        calories: Number(row.calories),
+        ingredients: JSON.parse(row.ingredients),
+        instructions: JSON.parse(row.instructions),
+    };
+}

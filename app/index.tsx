@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -14,10 +15,29 @@ import { RecipeCard } from "../components/RecipeCard";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
 import { LIGHT_ORANGE_BG, ORANGE } from "../constants/Colors";
-import { mockRecipes } from "../data/mockRecipes";
+import {
+  getAllRecipes,
+  initRecipesTable,
+  migrateDefaultRecipes,
+} from "../data/sqlite";
+import { Recipe } from "../types/recipe";
 
 export default function RecipesScreen() {
   const insets = useSafeAreaInsets();
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      await initRecipesTable();
+      await migrateDefaultRecipes();
+      const data = await getAllRecipes();
+      // console.log("data", data);
+      setRecipes(data);
+      setLoading(false);
+    })();
+  }, []);
 
   return (
     <ThemedView
@@ -55,12 +75,23 @@ export default function RecipesScreen() {
       </View>
 
       {/* Section Title */}
-      {mockRecipes.length > 0 && (
+      {recipes.length > 0 && (
         <ThemedText style={styles.sectionTitle}>Your Recipes</ThemedText>
       )}
 
       {/* Recipe List or Empty State */}
-      {mockRecipes.length === 0 ? (
+      {loading ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: 40,
+          }}
+        >
+          <ActivityIndicator size="large" color={ORANGE} />
+        </View>
+      ) : recipes.length === 0 ? (
         <View style={styles.emptyStateContainer}>
           <Image
             source={require("../assets/images/empty-recipe.png")}
@@ -78,7 +109,7 @@ export default function RecipesScreen() {
         </View>
       ) : (
         <FlatList
-          data={mockRecipes}
+          data={recipes}
           renderItem={({ item }) => (
             <RecipeCard recipe={item} style={styles.recipeCard} />
           )}

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Platform,
   Pressable,
@@ -13,7 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "../../components/ThemedText";
 import { ThemedView } from "../../components/ThemedView";
 import { Colors, ORANGE } from "../../constants/Colors";
-import { mockRecipes } from "../../data/mockRecipes";
+import { getRecipeById } from "../../data/sqlite";
+import { Recipe } from "../../types/recipe";
 
 type Tab = "ingredients" | "instructions";
 
@@ -29,10 +31,28 @@ const TAB_LABEL = {
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams();
-  const recipe = mockRecipes.find((r) => r.id === id);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("ingredients");
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const recipe = await getRecipeById(String(id));
+      setRecipe(recipe);
+      setLoading(false);
+    })();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={ORANGE} />
+      </View>
+    );
+  }
 
   if (!recipe) {
     return (
