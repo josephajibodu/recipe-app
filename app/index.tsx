@@ -32,7 +32,6 @@ export default function RecipesScreen() {
     await initRecipesTable();
     await migrateDefaultRecipes();
     const data = await getAllRecipes();
-    // console.log("data", data);
     setRecipes(data);
     setLoading(false);
   }, []);

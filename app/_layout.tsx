@@ -40,6 +40,14 @@ export default function RootLayout() {
             presentation: "modal",
           }}
         />
+        <Stack.Screen
+          name="recipe/edit/[id]"
+          options={{
+            title: "Edit Recipe",
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

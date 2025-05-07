@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import uuid from "react-native-uuid";
 import { ThemedText } from "../../components/ThemedText";
+import { ThemedView } from "../../components/ThemedView";
 import { ORANGE } from "../../constants/Colors";
 import { addRecipe } from "../../data/sqlite";
 
@@ -111,165 +112,169 @@ export default function NewRecipeScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
+    <ThemedView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <View style={styles.imagePickerWrapper}>
-          <Pressable style={styles.imagePickerBtn} onPress={pickImage}>
-            {imageUrl ? (
-              <Image
-                source={{ uri: imageUrl }}
-                style={styles.imagePreviewFull}
-                resizeMode="cover"
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.imagePickerWrapper}>
+            <Pressable style={styles.imagePickerBtn} onPress={pickImage}>
+              {imageUrl ? (
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.imagePreviewFull}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Ionicons name="image-outline" size={48} color={ORANGE} />
+                </View>
+              )}
+            </Pressable>
+            <Pressable onPress={pickImage} style={{ marginTop: 8 }}>
+              <ThemedText style={styles.imagePickerText}>
+                {imageUrl ? "Change Image" : "Pick an Image"}
+              </ThemedText>
+            </Pressable>
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+            placeholderTextColor="#bbb"
+          />
+          <TextInput
+            style={[styles.input, { height: 80 }]}
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+            placeholderTextColor="#bbb"
+            multiline
+          />
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.inputSmall, { flex: 1 }]}
+              placeholder="Prep Time (min)"
+              value={prepTime}
+              onChangeText={setPrepTime}
+              keyboardType="numeric"
+              placeholderTextColor="#bbb"
+            />
+            <TextInput
+              style={[
+                styles.input,
+                styles.inputSmall,
+                { flex: 1, marginLeft: 12 },
+              ]}
+              placeholder="Cook Time (min)"
+              value={cookTime}
+              onChangeText={setCookTime}
+              keyboardType="numeric"
+              placeholderTextColor="#bbb"
+            />
+          </View>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.inputSmall, { flex: 1 }]}
+              placeholder="Servings"
+              value={servings}
+              onChangeText={setServings}
+              keyboardType="numeric"
+              placeholderTextColor="#bbb"
+            />
+            <TextInput
+              style={[
+                styles.input,
+                styles.inputSmall,
+                { flex: 1, marginLeft: 12 },
+              ]}
+              placeholder="Calories"
+              value={calories}
+              onChangeText={setCalories}
+              keyboardType="numeric"
+              placeholderTextColor="#bbb"
+            />
+          </View>
+          <ThemedText style={styles.label}>Ingredients</ThemedText>
+          {ingredients.map((ingredient, idx) => (
+            <View key={idx} style={styles.ingredientRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder={`Ingredient ${idx + 1}`}
+                value={ingredient}
+                onChangeText={(text) => handleIngredientChange(text, idx)}
+                placeholderTextColor="#bbb"
               />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="image-outline" size={48} color={ORANGE} />
-              </View>
-            )}
+              {ingredients.length > 1 && (
+                <Pressable
+                  onPress={() => handleRemoveIngredient(idx)}
+                  style={styles.removeBtn}
+                >
+                  <Ionicons name="remove-circle" size={22} color="#e74c3c" />
+                </Pressable>
+              )}
+            </View>
+          ))}
+          <Pressable onPress={handleAddIngredient} style={styles.addRowBtn}>
+            <Ionicons name="add-circle" size={22} color={ORANGE} />
+            <ThemedText style={styles.addRowBtnText}>Add Ingredient</ThemedText>
           </Pressable>
-          <Pressable onPress={pickImage} style={{ marginTop: 8 }}>
-            <ThemedText style={styles.imagePickerText}>
-              {imageUrl ? "Change Image" : "Pick an Image"}
+          <ThemedText style={styles.label}>Instructions</ThemedText>
+          {instructions.map((instruction, idx) => (
+            <View key={idx} style={styles.ingredientRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder={`Step ${idx + 1}`}
+                value={instruction}
+                onChangeText={(text) => handleInstructionChange(text, idx)}
+                placeholderTextColor="#bbb"
+              />
+              {instructions.length > 1 && (
+                <Pressable
+                  onPress={() => handleRemoveInstruction(idx)}
+                  style={styles.removeBtn}
+                >
+                  <Ionicons name="remove-circle" size={22} color="#e74c3c" />
+                </Pressable>
+              )}
+            </View>
+          ))}
+          <Pressable onPress={handleAddInstruction} style={styles.addRowBtn}>
+            <Ionicons name="add-circle" size={22} color={ORANGE} />
+            <ThemedText style={styles.addRowBtnText}>Add Step</ThemedText>
+          </Pressable>
+          <Pressable
+            style={styles.saveBtn}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            <Ionicons
+              name="save"
+              size={22}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
+            <ThemedText style={styles.saveBtnText}>
+              {saving ? "Saving..." : "Save Recipe"}
             </ThemedText>
           </Pressable>
-        </View>
-        <TextInput
-          style={styles.input}
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          placeholderTextColor="#bbb"
-        />
-        <TextInput
-          style={[styles.input, { height: 80 }]}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          placeholderTextColor="#bbb"
-          multiline
-        />
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.inputSmall, { flex: 1 }]}
-            placeholder="Prep Time (min)"
-            value={prepTime}
-            onChangeText={setPrepTime}
-            keyboardType="numeric"
-            placeholderTextColor="#bbb"
-          />
-          <TextInput
-            style={[
-              styles.input,
-              styles.inputSmall,
-              { flex: 1, marginLeft: 12 },
-            ]}
-            placeholder="Cook Time (min)"
-            value={cookTime}
-            onChangeText={setCookTime}
-            keyboardType="numeric"
-            placeholderTextColor="#bbb"
-          />
-        </View>
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.inputSmall, { flex: 1 }]}
-            placeholder="Servings"
-            value={servings}
-            onChangeText={setServings}
-            keyboardType="numeric"
-            placeholderTextColor="#bbb"
-          />
-          <TextInput
-            style={[
-              styles.input,
-              styles.inputSmall,
-              { flex: 1, marginLeft: 12 },
-            ]}
-            placeholder="Calories"
-            value={calories}
-            onChangeText={setCalories}
-            keyboardType="numeric"
-            placeholderTextColor="#bbb"
-          />
-        </View>
-        <ThemedText style={styles.label}>Ingredients</ThemedText>
-        {ingredients.map((ingredient, idx) => (
-          <View key={idx} style={styles.ingredientRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder={`Ingredient ${idx + 1}`}
-              value={ingredient}
-              onChangeText={(text) => handleIngredientChange(text, idx)}
-              placeholderTextColor="#bbb"
-            />
-            {ingredients.length > 1 && (
-              <Pressable
-                onPress={() => handleRemoveIngredient(idx)}
-                style={styles.removeBtn}
-              >
-                <Ionicons name="remove-circle" size={22} color="#e74c3c" />
-              </Pressable>
-            )}
-          </View>
-        ))}
-        <Pressable onPress={handleAddIngredient} style={styles.addRowBtn}>
-          <Ionicons name="add-circle" size={22} color={ORANGE} />
-          <ThemedText style={styles.addRowBtnText}>Add Ingredient</ThemedText>
-        </Pressable>
-        <ThemedText style={styles.label}>Instructions</ThemedText>
-        {instructions.map((instruction, idx) => (
-          <View key={idx} style={styles.ingredientRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder={`Step ${idx + 1}`}
-              value={instruction}
-              onChangeText={(text) => handleInstructionChange(text, idx)}
-              placeholderTextColor="#bbb"
-            />
-            {instructions.length > 1 && (
-              <Pressable
-                onPress={() => handleRemoveInstruction(idx)}
-                style={styles.removeBtn}
-              >
-                <Ionicons name="remove-circle" size={22} color="#e74c3c" />
-              </Pressable>
-            )}
-          </View>
-        ))}
-        <Pressable onPress={handleAddInstruction} style={styles.addRowBtn}>
-          <Ionicons name="add-circle" size={22} color={ORANGE} />
-          <ThemedText style={styles.addRowBtnText}>Add Step</ThemedText>
-        </Pressable>
-        <Pressable
-          style={styles.saveBtn}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Ionicons
-            name="save"
-            size={22}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
-          <ThemedText style={styles.saveBtnText}>
-            {saving ? "Saving..." : "Save Recipe"}
-          </ThemedText>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    paddingBottom: 48,
+    paddingBottom: 100,
     backgroundColor: "#fff",
   },
   heading: {

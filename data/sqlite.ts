@@ -98,3 +98,34 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
         instructions: JSON.parse(row.instructions),
     };
 }
+
+export async function updateRecipe(recipe: Recipe): Promise<void> {
+    const db = await getDb();
+    await db.runAsync(
+        `UPDATE recipes 
+        SET title = ?, 
+            description = ?, 
+            prepTime = ?, 
+            cookTime = ?, 
+            servings = ?, 
+            calories = ?, 
+            ingredients = ?, 
+            instructions = ?, 
+            imageUrl = ?, 
+            updatedAt = ?
+        WHERE id = ?;`,
+        [
+            recipe.title,
+            recipe.description,
+            recipe.prepTime,
+            recipe.cookTime,
+            recipe.servings,
+            recipe.calories,
+            JSON.stringify(recipe.ingredients),
+            JSON.stringify(recipe.instructions),
+            recipe.imageUrl ?? null,
+            recipe.updatedAt,
+            recipe.id,
+        ]
+    );
+}

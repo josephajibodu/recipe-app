@@ -1,6 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import {
+  Link,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -45,9 +50,11 @@ export default function RecipeDetailScreen() {
     setLoading(false);
   }, [id]);
 
-  useEffect(() => {
-    fetchRecipe();
-  }, [fetchRecipe]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchRecipe();
+    }, [fetchRecipe])
+  );
 
   const handleDelete = () => {
     Alert.alert(
@@ -113,18 +120,6 @@ export default function RecipeDetailScreen() {
     >
       <View style={{ height: insets.top + 12 }} />
 
-      {/* Header with Back Button and Delete */}
-      <View style={styles.headerRow}>
-        <Link href="/" asChild>
-          <Pressable style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#222" />
-          </Pressable>
-        </Link>
-        <Pressable style={styles.deleteButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={24} color="#ff4444" />
-        </Pressable>
-      </View>
-
       {/* Top Image with Floating Buttons */}
       <View style={styles.imageContainer}>
         <Image
@@ -138,15 +133,21 @@ export default function RecipeDetailScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#222" />
         </Pressable>
-        <Pressable
+        <View
           style={[
-            styles.deleteButton,
+            styles.actionButtons,
             { top: Platform.OS === "ios" ? 54 : 24 },
           ]}
-          onPress={handleDelete}
         >
-          <Ionicons name="trash-outline" size={24} color="#ff0000" />
-        </Pressable>
+          <Link href={`/recipe/edit/${id}`} asChild>
+            <Pressable style={styles.editButton}>
+              <Ionicons name="pencil" size={24} color={ORANGE} />
+            </Pressable>
+          </Link>
+          <Pressable style={styles.deleteButton} onPress={handleDelete}>
+            <Ionicons name="trash-outline" size={24} color="#ff0000" />
+          </Pressable>
+        </View>
       </View>
 
       {/* Overlay Card */}
@@ -288,10 +289,23 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  deleteButton: {
+  actionButtons: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 54 : 24,
     right: 20,
+    flexDirection: "row",
+    gap: 12,
+    zIndex: 10,
+  },
+  editButton: {
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  deleteButton: {
     backgroundColor: "rgba(255,255,255,0.85)",
     borderRadius: 20,
     padding: 8,
