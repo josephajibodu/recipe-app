@@ -13,8 +13,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import uuid from "react-native-uuid";
 import { ThemedText } from "../../components/ThemedText";
 import { ORANGE } from "../../constants/Colors";
+import { addRecipe } from "../../data/sqlite";
 
 export default function NewRecipeScreen() {
   const router = useRouter();
@@ -64,7 +66,7 @@ export default function NewRecipeScreen() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Basic validation
     if (!title.trim()) return Alert.alert("Title is required");
     if (!description.trim()) return Alert.alert("Description is required");
@@ -80,13 +82,32 @@ export default function NewRecipeScreen() {
       return Alert.alert("All ingredients must be filled");
     if (instructions.some((i) => !i.trim()))
       return Alert.alert("All instructions must be filled");
-    // Here you would save to your backend or state
+
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const now = new Date().toISOString();
+      await addRecipe({
+        id: uuid.v4() as string,
+        title: title.trim(),
+        description: description.trim(),
+        prepTime: Number(prepTime),
+        cookTime: Number(cookTime),
+        servings: Number(servings),
+        calories: Number(calories),
+        ingredients: ingredients.map((i) => i.trim()),
+        instructions: instructions.map((i) => i.trim()),
+        imageUrl: imageUrl ?? undefined,
+        createdAt: now,
+        updatedAt: now,
+      });
       Alert.alert("Recipe saved!");
       router.back();
-    }, 1000);
+    } catch (e) {
+      console.log("error", e);
+      Alert.alert("Error saving recipe");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

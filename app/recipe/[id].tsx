@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -14,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "../../components/ThemedText";
 import { ThemedView } from "../../components/ThemedView";
 import { Colors, ORANGE } from "../../constants/Colors";
-import { getRecipeById } from "../../data/sqlite";
+import { deleteRecipe, getRecipeById } from "../../data/sqlite";
 import { Recipe } from "../../types/recipe";
 
 type Tab = "ingredients" | "instructions";
@@ -37,38 +38,93 @@ export default function RecipeDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const recipe = await getRecipeById(String(id));
-      setRecipe(recipe);
-      setLoading(false);
-    })();
+  const fetchRecipe = useCallback(async () => {
+    setLoading(true);
+    const data = await getRecipeById(String(id));
+    setRecipe(data);
+    setLoading(false);
   }, [id]);
+
+  useEffect(() => {
+    fetchRecipe();
+  }, [fetchRecipe]);
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Recipe",
+      "Are you sure you want to delete this recipe? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await deleteRecipe(String(id));
+            router.replace("/");
+          },
+        },
+      ]
+    );
+  };
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color={ORANGE} />
-      </View>
+      <ThemedView
+        style={[
+          styles.container,
+          { backgroundColor: Colors.light.lightOrangeBg },
+        ]}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color={ORANGE} />
+        </View>
+      </ThemedView>
     );
   }
 
   if (!recipe) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText>Recipe not found</ThemedText>
+      <ThemedView
+        style={[
+          styles.container,
+          { backgroundColor: Colors.light.lightOrangeBg },
+        ]}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ThemedText>Recipe not found</ThemedText>
+        </View>
       </ThemedView>
     );
   }
 
   return (
-    <View
+    <ThemedView
       style={[
         styles.container,
         { backgroundColor: Colors.light.lightOrangeBg },
       ]}
     >
+      <View style={{ height: insets.top + 12 }} />
+
+      {/* Header with Back Button and Delete */}
+      <View style={styles.headerRow}>
+        <Link href="/" asChild>
+          <Pressable style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#222" />
+          </Pressable>
+        </Link>
+        <Pressable style={styles.deleteButton} onPress={handleDelete}>
+          <Ionicons name="trash-outline" size={24} color="#ff4444" />
+        </Pressable>
+      </View>
+
       {/* Top Image with Floating Buttons */}
       <View style={styles.imageContainer}>
         <Image
@@ -77,13 +133,19 @@ export default function RecipeDetailScreen() {
           resizeMode="cover"
         />
         <Pressable
-          style={[
-            styles.backButton,
-            { top: (Platform.OS === "ios" ? 54 : 24) + insets.top },
-          ]}
+          style={[styles.backButton, { top: Platform.OS === "ios" ? 54 : 24 }]}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#222" />
+        </Pressable>
+        <Pressable
+          style={[
+            styles.deleteButton,
+            { top: Platform.OS === "ios" ? 54 : 24 },
+          ]}
+          onPress={handleDelete}
+        >
+          <Ionicons name="trash-outline" size={24} color="#ff0000" />
         </Pressable>
       </View>
 
@@ -183,7 +245,7 @@ export default function RecipeDetailScreen() {
           </View>
         )}
       </View>
-    </View>
+    </ThemedView>
   );
 }
 
@@ -207,10 +269,29 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
   backButton: {
     position: "absolute",
     top: Platform.OS === "ios" ? 54 : 24,
     left: 20,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 54 : 24,
+    right: 20,
     backgroundColor: "rgba(255,255,255,0.85)",
     borderRadius: 20,
     padding: 8,

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { Link, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -27,17 +27,21 @@ export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await initRecipesTable();
-      await migrateDefaultRecipes();
-      const data = await getAllRecipes();
-      // console.log("data", data);
-      setRecipes(data);
-      setLoading(false);
-    })();
+  const fetchRecipes = useCallback(async () => {
+    setLoading(true);
+    await initRecipesTable();
+    await migrateDefaultRecipes();
+    const data = await getAllRecipes();
+    // console.log("data", data);
+    setRecipes(data);
+    setLoading(false);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRecipes();
+    }, [fetchRecipes])
+  );
 
   return (
     <ThemedView

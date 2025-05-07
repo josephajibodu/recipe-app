@@ -71,7 +71,7 @@ export async function getAllRecipes(): Promise<Recipe[]> {
 
 export async function deleteRecipe(id: string): Promise<void> {
     const db = await getDb();
-    await db.runAsync('DELETE FROM recipes WHERE id = ?;', [id]);
+    await db.runAsync(`DELETE FROM recipes WHERE id = ?`, [id]);
 }
 
 export async function migrateDefaultRecipes() {
