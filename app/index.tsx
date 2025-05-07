@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React from "react";
-import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RecipeCard } from "../components/RecipeCard";
 import { ThemedText } from "../components/ThemedText";
@@ -16,12 +23,12 @@ export default function RecipesScreen() {
     <ThemedView
       style={[styles.container, { backgroundColor: LIGHT_ORANGE_BG }]}
     >
-      <View style={{ height: insets.top }} />
+      <View style={{ height: insets.top + 12 }} />
       {/* Header Greeting and Add Button */}
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <ThemedText style={styles.greeting}>
-            What would you like to cook today?
+            Save and organize your favorite recipes
           </ThemedText>
         </View>
         <Link href="/recipe/new" asChild>
@@ -48,19 +55,39 @@ export default function RecipesScreen() {
       </View>
 
       {/* Section Title */}
-      <ThemedText style={styles.sectionTitle}>Your Recipes</ThemedText>
+      {mockRecipes.length > 0 && (
+        <ThemedText style={styles.sectionTitle}>Your Recipes</ThemedText>
+      )}
 
-      {/* Recipe List */}
-      <FlatList
-        data={mockRecipes}
-        renderItem={({ item }) => (
-          <RecipeCard recipe={item} style={styles.recipeCard} />
-        )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-      />
+      {/* Recipe List or Empty State */}
+      {mockRecipes.length === 0 ? (
+        <View style={styles.emptyStateContainer}>
+          <Image
+            source={require("../assets/images/empty-recipe.png")}
+            style={styles.emptyStateImage}
+            resizeMode="contain"
+          />
+          <ThemedText style={[styles.emptyStateTitle, { color: "#222" }]}>
+            Your recipe collection is empty
+          </ThemedText>
+          <ThemedText style={styles.emptyStateText}>
+            Save your favorite recipes here for easy access anytime. Tap the{" "}
+            <Ionicons name="add" size={18} color={ORANGE} /> button to add your
+            first recipe.
+          </ThemedText>
+        </View>
+      ) : (
+        <FlatList
+          data={mockRecipes}
+          renderItem={({ item }) => (
+            <RecipeCard recipe={item} style={styles.recipeCard} />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+        />
+      )}
     </ThemedView>
   );
 }
@@ -134,5 +161,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 48,
+    paddingHorizontal: 32,
+  },
+  emptyStateImage: {
+    width: 160,
+    height: 160,
+    marginBottom: 32,
+  },
+  emptyStateTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: ORANGE,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#888",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 8,
+    marginHorizontal: 8,
   },
 });

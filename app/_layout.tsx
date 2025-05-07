@@ -31,7 +31,6 @@ export default function RootLayout() {
           name="recipe/[id]"
           options={{
             headerShown: false,
-            title: "Recipe Details",
           }}
         />
         <Stack.Screen
