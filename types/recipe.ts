@@ -8,6 +8,7 @@ export interface Recipe {
     ingredients: string[];
     instructions: string[];
     imageUrl?: string;
+    calories: number;
     createdAt: string;
     updatedAt: string;
 } 

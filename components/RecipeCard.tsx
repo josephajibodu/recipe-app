@@ -1,17 +1,25 @@
 import { BlurView } from "expo-blur";
 import { Link } from "expo-router";
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 import { Recipe } from "../types/recipe";
 
 interface RecipeCardProps {
   recipe: Recipe;
+  style?: ViewStyle;
 }
 
-export function RecipeCard({ recipe }: RecipeCardProps) {
+export function RecipeCard({ recipe, style }: RecipeCardProps) {
   return (
-    <Link href={`recipe/${recipe.id}`} asChild>
-      <Pressable style={styles.container}>
+    <Link href={`/recipe/${recipe.id}`} asChild>
+      <Pressable style={[styles.container, style]}>
         <Image
           source={{ uri: recipe.imageUrl }}
           style={styles.image}

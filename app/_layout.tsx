@@ -30,6 +30,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="recipe/[id]"
           options={{
+            headerShown: false,
             title: "Recipe Details",
           }}
         />
