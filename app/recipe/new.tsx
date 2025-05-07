@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,7 +26,7 @@ export default function NewRecipeScreen() {
   const [calories, setCalories] = useState("");
   const [ingredients, setIngredients] = useState<string[]>([""]);
   const [instructions, setInstructions] = useState<string[]>([""]);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleAddIngredient = () => setIngredients([...ingredients, ""]);
@@ -47,6 +49,19 @@ export default function NewRecipeScreen() {
   const handleRemoveInstruction = (idx: number) => {
     if (instructions.length === 1) return;
     setInstructions(instructions.filter((_, i) => i !== idx));
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImageUrl(result.assets[0].uri);
+    }
   };
 
   const handleSave = () => {
@@ -83,7 +98,26 @@ export default function NewRecipeScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={styles.heading}>Add a New Recipe</ThemedText>
+        <View style={styles.imagePickerWrapper}>
+          <Pressable style={styles.imagePickerBtn} onPress={pickImage}>
+            {imageUrl ? (
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.imagePreviewFull}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="image-outline" size={48} color={ORANGE} />
+              </View>
+            )}
+          </Pressable>
+          <Pressable onPress={pickImage} style={{ marginTop: 8 }}>
+            <ThemedText style={styles.imagePickerText}>
+              {imageUrl ? "Change Image" : "Pick an Image"}
+            </ThemedText>
+          </Pressable>
+        </View>
         <TextInput
           style={styles.input}
           placeholder="Title"
@@ -143,13 +177,6 @@ export default function NewRecipeScreen() {
             placeholderTextColor="#bbb"
           />
         </View>
-        <TextInput
-          style={styles.input}
-          placeholder="Image URL (optional)"
-          value={imageUrl}
-          onChangeText={setImageUrl}
-          placeholderTextColor="#bbb"
-        />
         <ThemedText style={styles.label}>Ingredients</ThemedText>
         {ingredients.map((ingredient, idx) => (
           <View key={idx} style={styles.ingredientRow}>
@@ -230,6 +257,41 @@ const styles = StyleSheet.create({
     color: ORANGE,
     marginBottom: 18,
     textAlign: "center",
+  },
+  imagePickerWrapper: {
+    alignItems: "center",
+    marginBottom: 18,
+    width: "100%",
+  },
+  imagePickerBtn: {
+    width: "100%",
+    height: 200,
+    borderRadius: 20,
+    backgroundColor: "#FFF7F3",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#FFE1D6",
+  },
+  imagePreviewFull: {
+    width: "100%",
+    height: 200,
+    borderRadius: 20,
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePickerText: {
+    color: ORANGE,
+    fontWeight: "600",
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: 4,
   },
   input: {
     backgroundColor: "#FAFAFA",
