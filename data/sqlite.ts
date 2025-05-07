@@ -13,24 +13,89 @@ export async function getDb() {
     return db;
 }
 
-export async function initRecipesTable() {
+const DB_VERSION = 1; // Increment this when making schema changes
+
+async function getCurrentVersion(): Promise<number> {
+    const db = await getDb();
+    const version = await db.getFirstAsync<{ version: number }>('SELECT version FROM db_version');
+    return version?.version || 0;
+}
+
+async function updateVersion(version: number): Promise<void> {
+    const db = await getDb();
+    await db.execAsync(`UPDATE db_version SET version = ${version}`);
+}
+
+async function initVersionTable(): Promise<void> {
     const db = await getDb();
     await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS recipes (
-      id TEXT PRIMARY KEY NOT NULL,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      prepTime INTEGER NOT NULL,
-      cookTime INTEGER NOT NULL,
-      servings INTEGER NOT NULL,
-      calories INTEGER NOT NULL,
-      ingredients TEXT NOT NULL,
-      instructions TEXT NOT NULL,
-      imageUrl TEXT,
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
-    );
-  `);
+        CREATE TABLE IF NOT EXISTS db_version (
+            version INTEGER NOT NULL
+        );
+    `);
+
+    // Check if version exists
+    const version = await db.getFirstAsync<{ version: number }>('SELECT version FROM db_version');
+    if (!version) {
+        // Initialize with current version
+        await db.execAsync(`INSERT INTO db_version (version) VALUES (${DB_VERSION})`);
+    }
+}
+
+async function runMigrations(): Promise<void> {
+    const currentVersion = await getCurrentVersion();
+    const db = await getDb();
+
+    // Run migrations in order
+    if (currentVersion < 1) {
+        // Version 1 migrations
+        await db.execAsync(`
+            CREATE TABLE IF NOT EXISTS recipes (
+                id TEXT PRIMARY KEY NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                prepTime INTEGER NOT NULL,
+                cookTime INTEGER NOT NULL,
+                servings INTEGER NOT NULL,
+                calories INTEGER NOT NULL,
+                ingredients TEXT NOT NULL,
+                instructions TEXT NOT NULL,
+                imageUrl TEXT,
+                createdAt TEXT NOT NULL,
+                updatedAt TEXT NOT NULL
+            );
+        `);
+    }
+
+    // Add more migrations here as needed
+    // Example:
+    // if (currentVersion < 2) {
+    //     await db.execAsync(`
+    //         ALTER TABLE recipes ADD COLUMN difficulty TEXT;
+    //     `);
+    // }
+
+    // Update version after migrations
+    await updateVersion(DB_VERSION);
+}
+
+export async function initRecipesTable() {
+    // Initialize version tracking
+    await initVersionTable();
+
+    // Run migrations
+    await runMigrations();
+}
+
+
+export async function migrateDefaultRecipes() {
+    const db = await getDb();
+    const rows = await db.getAllAsync<any>('SELECT COUNT(*) as count FROM recipes;');
+    if (rows[0]?.count === 0) {
+        for (const recipe of mockRecipes) {
+            await addRecipe(recipe);
+        }
+    }
 }
 
 export async function addRecipe(recipe: Recipe): Promise<void> {
@@ -72,16 +137,6 @@ export async function getAllRecipes(): Promise<Recipe[]> {
 export async function deleteRecipe(id: string): Promise<void> {
     const db = await getDb();
     await db.runAsync(`DELETE FROM recipes WHERE id = ?`, [id]);
-}
-
-export async function migrateDefaultRecipes() {
-    const db = await getDb();
-    const rows = await db.getAllAsync<any>('SELECT COUNT(*) as count FROM recipes;');
-    if (rows[0]?.count === 0) {
-        for (const recipe of mockRecipes) {
-            await addRecipe(recipe);
-        }
-    }
 }
 
 export async function getRecipeById(id: string): Promise<Recipe | null> {
