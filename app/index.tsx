@@ -15,7 +15,11 @@ import { RecipeCard } from "../components/RecipeCard";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
 import { LIGHT_ORANGE_BG, ORANGE } from "../constants/Colors";
-import { getAllRecipes, initRecipesTable } from "../data/sqlite";
+import {
+  getAllRecipes,
+  initRecipesTable,
+  migrateDefaultRecipes,
+} from "../data/sqlite";
 import { Recipe } from "../types/recipe";
 
 export default function RecipesScreen() {
@@ -26,7 +30,7 @@ export default function RecipesScreen() {
   const fetchRecipes = useCallback(async () => {
     setLoading(true);
     await initRecipesTable();
-    // await migrateDefaultRecipes();
+    await migrateDefaultRecipes();
     const data = await getAllRecipes();
     setRecipes(data);
     setLoading(false);
