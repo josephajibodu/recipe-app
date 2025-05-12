@@ -44,7 +44,15 @@
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "recipe-app",
+          "organization": "freelance-sjq"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
